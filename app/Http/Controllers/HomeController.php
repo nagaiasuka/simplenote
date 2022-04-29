@@ -78,4 +78,13 @@ class HomeController extends Controller
 
         return view('edit',compact('user','memo','memos'));
     }
+
+    public function update(Request $request,$id)
+    {
+        $inputs=$request->all();
+        Memo::where('id',$id)->update(['content'=>$inputs['content']]);
+        
+        // リダイレクト処理
+        return redirect()->route('home');
+    }
 }
