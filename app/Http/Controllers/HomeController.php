@@ -26,20 +26,14 @@ class HomeController extends Controller
      */
     public function index()
     {
-        $user =Auth::user();
-        // メモ一覧を取得
-        $memos=Memo::where('user_id',$user['id'])->where('status',1)->orderBy('updated_at','desc')->get();
-        $tags=Tag::where('user_id',$user['id'])->get();
-        return view('home',compact('memos','user','tags'));
+      
+        return view('create');
     }
 
     public function create()
     {
-        // ログインしているユーザー情報を渡す
-        $user =Auth::user();
-        $memos=Memo::where('user_id',$user['id'])->where('status',1)->orderBy('updated_at','desc')->get();
-        $tags=Tag::where('user_id',$user['id'])->get();
-        return view('create',compact('user','memos','tags'));
+    
+        return view('create',);
     }
 
     public function store(Request $request)
@@ -75,9 +69,8 @@ class HomeController extends Controller
         // ログインしているユーザー情報を渡す
         $user =Auth::user();
         $memo = Memo::where('status', 1)->where('id',$id)->where('user_id',$user['id'])->first();
-        $memos=Memo::where('user_id',$user['id'])->where('status',1)->orderBy('updated_at','desc')->get();
-        $tags=Tag::where('user_id',$user['id'])->get();
-        return view('edit',compact('user','memo','memos','tags'));
+      
+        return view('edit',compact('memo'));
     }
 
     public function update(Request $request,$id)
@@ -87,5 +80,14 @@ class HomeController extends Controller
         
         // リダイレクト処理
         return redirect()->route('home');
+    }
+
+    public function delete(Request $request,$id)
+    {
+        $inputs=$request->all();
+        Memo::where('id',$id)->update(['status'=>2]);
+        
+        // リダイレクト処理
+        return redirect()->route('home')->with('success','メモの削除が完了しました！');
     }
 }
