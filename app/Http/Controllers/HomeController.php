@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Memo;
-use App\Tag;
+use App\models\Tag;
 
 class HomeController extends Controller
 {
@@ -29,7 +29,8 @@ class HomeController extends Controller
         $user =Auth::user();
         // メモ一覧を取得
         $memos=Memo::where('user_id',$user['id'])->where('status',1)->orderBy('updated_at','desc')->get();
-        return view('home',compact('memos','user'));
+        $tags=Tag::where('user_id',$user['id'])->get();
+        return view('home',compact('memos','user','tags'));
     }
 
     public function create()
@@ -37,8 +38,8 @@ class HomeController extends Controller
         // ログインしているユーザー情報を渡す
         $user =Auth::user();
         $memos=Memo::where('user_id',$user['id'])->where('status',1)->orderBy('updated_at','desc')->get();
-
-        return view('create',compact('user','memos'));
+        $tags=Tag::where('user_id',$user['id'])->get();
+        return view('create',compact('user','memos','tags'));
     }
 
     public function store(Request $request)
@@ -49,19 +50,19 @@ class HomeController extends Controller
         // MEMOモデルにDBへ保存する命令を出す
 
         // 同じタグがあるか確認
-        // $exist_tag = Tag::where('name', $data['tag'])->where('user_id', $data['user_id'])->first();
-        // if( empty($exist_tag['id']) ){
-        //     //先にタグをインサート
-        //     $tag_id = Tag::insertGetId(['name' => $data['tag'], 'user_id' => $data['user_id']]);
-        // }else{
-        //     $tag_id = $exist_tag['id'];
-        // }
+        $exist_tag = Tag::where('name', $data['tag'])->where('user_id', $data['user_id'])->first();
+        if( empty($exist_tag['id']) ){
+            //先にタグをインサート
+            $tag_id = Tag::insertGetId(['name' => $data['tag'], 'user_id' => $data['user_id']]);
+        }else{
+            $tag_id = $exist_tag['id'];
+        }
         //タグのIDが判明する
         // タグIDをmemosテーブルに入れてあげる
         $memo_id = Memo::insertGetId([
              'content' => $data['content'],
              'user_id' => $data['user_id'], 
-            //  'tag_id' => $tag_id,
+             'tag_id' => $tag_id,
              'status' => 1
         ]);
         
@@ -75,14 +76,14 @@ class HomeController extends Controller
         $user =Auth::user();
         $memo = Memo::where('status', 1)->where('id',$id)->where('user_id',$user['id'])->first();
         $memos=Memo::where('user_id',$user['id'])->where('status',1)->orderBy('updated_at','desc')->get();
-
-        return view('edit',compact('user','memo','memos'));
+        $tags=Tag::where('user_id',$user['id'])->get();
+        return view('edit',compact('user','memo','memos','tags'));
     }
 
     public function update(Request $request,$id)
     {
         $inputs=$request->all();
-        Memo::where('id',$id)->update(['content'=>$inputs['content']]);
+        Memo::where('id',$id)->update(['content'=>$inputs['content'],'tag_id'=>$inputs['tag_id']]);
         
         // リダイレクト処理
         return redirect()->route('home');
